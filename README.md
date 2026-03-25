@@ -8,11 +8,11 @@ When budget constraints are detected, the gateway applies intelligent degradatio
 
 Key capabilities include:
 
-Token usage prediction using historical statistics
-Multi-tenant budget tracking and enforcement
-Real-time admission control with Redis
-Strongly consistent usage ledger (append-only)
-Intelligent request routing and degradation
-Retry safety, idempotency, and cancellation-aware accounting
+* Token usage prediction using historical statistics
+* Multi-tenant budget tracking and enforcement
+* Real-time admission control with Redis
+* Strongly consistent usage ledger (append-only)
+* Intelligent request routing and degradation
+* Retry safety, idempotency, and cancellation-aware accounting
 
 This project demonstrates patterns from distributed systems such as admission control, eventual consistency with reconciliation, and cost-aware resource allocation, inspired by principles from Designing Data-Intensive Applications.
