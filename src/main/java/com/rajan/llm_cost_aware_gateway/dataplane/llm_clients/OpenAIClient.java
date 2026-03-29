@@ -33,7 +33,7 @@ public class OpenAIClient implements LLmClient {
         int delay = ThreadLocalRandom.current().nextInt(0, 10000);
         try {
             Thread.sleep(delay);
-            final String modelResponse = fakeResponse(request.getPrompt());
+            final String modelResponse = fakeResponse(request.getPrompt(), request.getMaxTokens());
             var inputTokens = request.getPrompt().split(" ").length;
             var outputTokens = modelResponse.split(" ").length;
 
@@ -63,8 +63,8 @@ public class OpenAIClient implements LLmClient {
 
     }
 
-    private String fakeResponse(String prompt) {
-        int length = ThreadLocalRandom.current().nextInt(prompt.length(), 1000);
+    private String fakeResponse(String prompt, int maxTokens) {
+        int length = ThreadLocalRandom.current().nextInt(prompt.length(), Math.min(maxTokens, 3000));
         return Constants.RESPONSE_TEXT.substring(0, length);
     }
 }
