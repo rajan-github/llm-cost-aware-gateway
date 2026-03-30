@@ -7,6 +7,7 @@ import com.rajan.llm_cost_aware_gateway.dataplane.models.LLmResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -38,11 +39,10 @@ public class OpenAIClient implements LLmClient {
         int delay = ThreadLocalRandom.current().nextInt(0, 10000);
         try {
             Thread.sleep(delay);
-            var inputTokens = request.getPrompt().split(" ").length;
+            var inputTokens = convertToToken(request.getPrompt()).size();
             final String modelResponse = fakeResponse(request.getMaxTokens());
-            var outputTokens = modelResponse.split(" ").length;
-
-            double estimatedCost = getEstimatedCost(inputTokens, outputTokens);
+            final var outputTokens = convertToToken(modelResponse).size();
+            final double estimatedCost = getEstimatedCost(inputTokens, outputTokens);
 
             var requestResponse = LLmResponse.builder()
                     .usage(new LLmResponse.Usage(inputTokens, outputTokens, inputTokens + outputTokens, estimatedCost))
@@ -69,9 +69,9 @@ public class OpenAIClient implements LLmClient {
         }
         final AtomicLong tokenCount = new AtomicLong(0);
         final String response = fakeResponse(request.getMaxTokens());
-        final int inputTokens = request.getPrompt().split(" ").length;
-        final int responseTokens = response.split(" ").length;
-        return Arrays.stream(response.split(" ")).map(token -> {
+        final var tokens = convertToToken(response);
+        final int inputTokens = convertToToken(request.getPrompt()).size();
+        return tokens.stream().map(token -> {
             if (cancelMap.getOrDefault(request.getRequestId(), new AtomicBoolean(false)).get()) {
                 cancelMap.remove(request.getRequestId());
                 return new LLMResponseChunk(
@@ -82,7 +82,7 @@ public class OpenAIClient implements LLmClient {
                 Thread.sleep(ThreadLocalRandom.current().nextInt(10, 50));
                 long current = tokenCount.incrementAndGet();
                 return new LLMResponseChunk(
-                        request.getRequestId(), token, responseTokens == current, new LLmResponse.Usage(inputTokens, (int) current, (int) current + inputTokens, getEstimatedCost(inputTokens, current))
+                        request.getRequestId(), token, tokens.size() == current, new LLmResponse.Usage(inputTokens, (int) current, (int) current + inputTokens, getEstimatedCost(inputTokens, current))
                 );
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -93,6 +93,17 @@ public class OpenAIClient implements LLmClient {
     @Override
     public void cancel(UUID requestId) {
         this.cancelMap.put(requestId, new AtomicBoolean(true));
+    }
+
+    private List<String> convertToToken(String string) {
+        if (string == null) {
+            return List.of();
+        }
+        List<String> tokens = new ArrayList<>();
+        for (int i = 0; i < string.length(); i++) {
+            tokens.add(string.substring(i, Math.min(i + 4, string.length())));
+        }
+        return tokens;
     }
 
     private String fakeResponse(int maxTokens) {
