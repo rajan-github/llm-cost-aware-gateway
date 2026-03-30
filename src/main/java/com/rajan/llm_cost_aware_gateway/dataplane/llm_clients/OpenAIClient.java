@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -71,16 +70,14 @@ public class OpenAIClient implements LLmClient {
         final String response = fakeResponse(request.getMaxTokens());
         final var tokens = convertToToken(response);
         final int inputTokens = convertToToken(request.getPrompt()).size();
-        return tokens.stream().map(token -> {
-            if (cancelMap.getOrDefault(request.getRequestId(), new AtomicBoolean(false)).get()) {
-                cancelMap.remove(request.getRequestId());
-                return new LLMResponseChunk(
-                        request.getRequestId(), token, true, new LLmResponse.Usage(inputTokens, (int) tokenCount.get(), (int) tokenCount.get() + inputTokens, getEstimatedCost(inputTokens, tokenCount.get()))
-                );
-            }
+        final var cancelled = cancelMap.getOrDefault(request.getRequestId(), new AtomicBoolean(false));
+        return tokens.stream().takeWhile(token -> !cancelled.get()).map(token -> {
             try {
                 Thread.sleep(ThreadLocalRandom.current().nextInt(10, 50));
                 long current = tokenCount.incrementAndGet();
+                if (tokens.size() == current) {
+                    cancelMap.remove(request.getRequestId());
+                }
                 return new LLMResponseChunk(
                         request.getRequestId(), token, tokens.size() == current, new LLmResponse.Usage(inputTokens, (int) current, (int) current + inputTokens, getEstimatedCost(inputTokens, current))
                 );
@@ -100,7 +97,7 @@ public class OpenAIClient implements LLmClient {
             return List.of();
         }
         List<String> tokens = new ArrayList<>();
-        for (int i = 0; i < string.length(); i++) {
+        for (int i = 0; i < string.length(); i += 4) {
             tokens.add(string.substring(i, Math.min(i + 4, string.length())));
         }
         return tokens;
