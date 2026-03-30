@@ -70,17 +70,19 @@ public class OpenAIClient implements LLmClient {
         final AtomicLong tokenCount = new AtomicLong(0);
         final String response = fakeResponse(request.getMaxTokens());
         final int inputTokens = request.getPrompt().split(" ").length;
+        final int responseTokens = response.split(" ").length;
         return Arrays.stream(response.split(" ")).map(token -> {
-            if (cancelMap.containsKey(request.getRequestId())) {
+            if (cancelMap.getOrDefault(request.getRequestId(), new AtomicBoolean(false)).get()) {
+                cancelMap.remove(request.getRequestId());
                 return new LLMResponseChunk(
                         request.getRequestId(), token, true, new LLmResponse.Usage(inputTokens, (int) tokenCount.get(), (int) tokenCount.get() + inputTokens, getEstimatedCost(inputTokens, tokenCount.get()))
                 );
             }
             try {
-                Thread.sleep(50);
+                Thread.sleep(ThreadLocalRandom.current().nextInt(10, 50));
                 long current = tokenCount.incrementAndGet();
                 return new LLMResponseChunk(
-                        request.getRequestId(), token, false, new LLmResponse.Usage(inputTokens, (int) current, (int) current + inputTokens, getEstimatedCost(inputTokens, current))
+                        request.getRequestId(), token, responseTokens == current, new LLmResponse.Usage(inputTokens, (int) current, (int) current + inputTokens, getEstimatedCost(inputTokens, current))
                 );
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
