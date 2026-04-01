@@ -6,6 +6,5 @@ import com.rajan.llm_cost_aware_gateway.controlplane.models.TokenEstimate;
 public interface TokenEstimator {
     TokenEstimate estimate(Request request);
 
-    void update(long actualUsage, TokenEstimate estimate);
-
+    void update(long actualUsage, TokenEstimate estimate, final Request request);
 }
