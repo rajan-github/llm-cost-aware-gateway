@@ -18,13 +18,13 @@ public class InMemoryCacheLedger implements CacheLedger {
 
 
     @Override
-    public synchronized TokenStats getTokenStats(String orgId, String endpoint, String model) {
+    public TokenStats getTokenStats(String orgId, String endpoint, String model) {
         final var key = createLedgerKey(orgId, endpoint, model);
         return tokenStats.get(key);
     }
 
     @Override
-    public synchronized void updateTokenStats(String orgId, String endpoint, String model, TokenStats stats) {
+    public void updateTokenStats(String orgId, String endpoint, String model, TokenStats stats) {
         final var key = createLedgerKey(orgId, endpoint, model);
         tokenStats.put(key, stats);
     }

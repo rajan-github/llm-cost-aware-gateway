@@ -31,17 +31,15 @@ public class EMAEstimator implements TokenEstimator {
         }
         double estimatedOutputP50 = Math.min(request.getMaxTokens(), lastStats.p50());
         double estimatedOutputP95 = Math.min(request.getMaxTokens(), lastStats.p95());
-        double p50 = inputTokens + estimatedOutputP50;
-        double p95 = inputTokens + estimatedOutputP95;
         confidence = 1 / (1 + lastStats.error());
-        return new TokenEstimate(p50, p95, confidence);
+        return new TokenEstimate(estimatedOutputP50, estimatedOutputP95, confidence);
     }
 
     @Override
     public void update(long actualUsage, TokenEstimate estimate, Request request) {
         double p50 = ALPHA * actualUsage + (1 - ALPHA) * estimate.p50();
         double p95 = ALPHA * actualUsage + (1 - ALPHA) * estimate.p95();
-        double error = Math.abs(actualUsage - estimate.p50());
+        double error = Math.abs(actualUsage - estimate.p50())/Math.max(1, actualUsage);
         final var lastStats = cacheLedger.getTokenStats(request.getOrgId(), request.getEndpoint(), request.getModel());
         long count = lastStats == null ? 0 : lastStats.count() + 1;
         final var stats = new TokenStats(count, p50, p95, error);
