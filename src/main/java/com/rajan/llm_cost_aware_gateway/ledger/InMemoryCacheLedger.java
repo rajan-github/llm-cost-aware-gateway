@@ -8,8 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 
-import java.util.UUID;
-
 import static com.rajan.llm_cost_aware_gateway.utils.Utils.createLedgerKey;
 
 @Slf4j
@@ -60,6 +58,7 @@ public class InMemoryCacheLedger implements CacheLedger {
 
     @Override
     public boolean refundTokens(String orgId, long tokens) {
+        log.info("refundTokens for orgId: {} and refundTokens: {}", orgId, tokens);
         final String key = CommonConstants.BUDGET_KEY + orgId;
         final var responseOptional = cache.getValue(key);
         if (responseOptional.isPresent()) {
@@ -71,6 +70,22 @@ public class InMemoryCacheLedger implements CacheLedger {
             }
         } else {
             cache.setValue(key, tokens);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean deductTokens(String orgId, long tokens) {
+        log.info("deductTokens for orgId: {}, tokens: {}", orgId, tokens);
+        final String key = CommonConstants.BUDGET_KEY + orgId;
+        final var responseOptional = cache.getValue(key);
+        if (responseOptional.isPresent()) {
+            var value = responseOptional.get();
+            if (value instanceof Long) {
+                cache.setValue(key, (Long) value - tokens);
+            } else {
+                throw new IllegalArgumentException("Value for key: " + key + " is not an instance of Long");
+            }
         }
         return true;
     }
