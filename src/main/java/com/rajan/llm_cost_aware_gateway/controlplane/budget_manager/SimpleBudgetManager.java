@@ -35,12 +35,12 @@ public class SimpleBudgetManager implements BudgetManager {
     @Override
     public void commit(String orgId, UUID requestId, long actualTokens) {
         log.info("commit is invoked for orgId: {}, requestId: {}", orgId, requestId);
-        LedgerEntry reserveEntry = dbLedger.getReserveEntry(requestId);
-        if (reserveEntry != null && reserveEntry.tokens() < actualTokens) {
-            cacheLedger.deductTokens(orgId, actualTokens - reserveEntry.tokens());
+        var reserveEntry = dbLedger.getReserveEntry(requestId, orgId);
+        if (reserveEntry != null && reserveEntry.getTokens() < actualTokens) {
+            cacheLedger.deductTokens(orgId, actualTokens - reserveEntry.getTokens());
         } else {
             if (reserveEntry != null) {
-                long refundTokens = Math.max(0L, reserveEntry.tokens() - actualTokens);
+                long refundTokens = Math.max(0L, reserveEntry.getTokens() - actualTokens);
                 cacheLedger.refundTokens(orgId, refundTokens);
                 dbLedger.insert(orgId, requestId, refundTokens, LEDGER_STATE.REFUND);
             }

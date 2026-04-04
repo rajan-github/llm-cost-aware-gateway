@@ -1,6 +1,5 @@
 package com.rajan.llm_cost_aware_gateway.ledger;
 
-import com.rajan.llm_cost_aware_gateway.controlplane.models.LedgerEntry;
 import com.rajan.llm_cost_aware_gateway.entities.LedgerKey;
 import com.rajan.llm_cost_aware_gateway.entities.TokenLedger;
 import com.rajan.llm_cost_aware_gateway.enums.LEDGER_STATE;
@@ -29,12 +28,14 @@ public class RelationalDBLedger implements DBLedger {
     @Transactional(readOnly = true)
     @Override
     public long sumUsageByOrgId(String orgId) {
-        return 0;
+        log.info("sumUsageByOrgId is invoked with orgId: {}", orgId);
+        return ledgerRepository.sumUsageByOrgId(orgId);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public LedgerEntry getReserveEntry(UUID requestId) {
-        return null;
+    public TokenLedger getReserveEntry(UUID requestId, String orgId) {
+        log.info("getReserveEntry is invoked with requestId: {}", requestId);
+        return ledgerRepository.findReserved(orgId, requestId);
     }
 }

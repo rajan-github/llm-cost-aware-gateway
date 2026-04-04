@@ -1,7 +1,9 @@
 package com.rajan.llm_cost_aware_gateway.ledger;
 
 import com.rajan.llm_cost_aware_gateway.controlplane.models.LedgerEntry;
+import com.rajan.llm_cost_aware_gateway.entities.TokenLedger;
 import com.rajan.llm_cost_aware_gateway.enums.LEDGER_STATE;
+
 import java.util.UUID;
 
 public interface DBLedger {
@@ -9,5 +11,5 @@ public interface DBLedger {
 
     long sumUsageByOrgId(String orgId);
 
-    LedgerEntry getReserveEntry(UUID requestId);
+    TokenLedger getReserveEntry(UUID requestId, String orgId);
 }
