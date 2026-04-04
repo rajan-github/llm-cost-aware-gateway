@@ -10,4 +10,5 @@ public interface CacheLedger {
     void updateTokenStats(final String orgId, final String endpoint, final String model, final TokenStats stats);
 
     boolean reserveTokens(String orgId, long estimatedTokens);
+    boolean refundTokens(String orgId, long tokens);
 }

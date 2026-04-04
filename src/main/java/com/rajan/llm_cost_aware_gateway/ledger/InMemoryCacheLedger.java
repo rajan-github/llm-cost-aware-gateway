@@ -58,6 +58,23 @@ public class InMemoryCacheLedger implements CacheLedger {
         }
     }
 
+    @Override
+    public boolean refundTokens(String orgId, long tokens) {
+        final String key = CommonConstants.BUDGET_KEY + orgId;
+        final var responseOptional = cache.getValue(key);
+        if (responseOptional.isPresent()) {
+            var value = responseOptional.get();
+            if (value instanceof Long) {
+                cache.setValue(key, (long) value + tokens);
+            } else {
+                throw new IllegalArgumentException("Value for key: " + key + " is not an instance of Long");
+            }
+        } else {
+            cache.setValue(key, tokens);
+        }
+        return true;
+    }
+
     private boolean tryReserveTokens(String orgId, long estimatedTokens) {
         final String key = CommonConstants.BUDGET_KEY + orgId;
         final var responseOptional = cache.getValue(key);
@@ -67,7 +84,6 @@ public class InMemoryCacheLedger implements CacheLedger {
                 long currentTokens = (Long) value;
                 if (currentTokens >= estimatedTokens) {
                     cache.setValue(key, currentTokens - estimatedTokens);
-
                     return true;
                 }
             } else {
