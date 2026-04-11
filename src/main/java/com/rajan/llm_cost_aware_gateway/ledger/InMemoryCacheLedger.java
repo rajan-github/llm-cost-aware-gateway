@@ -9,7 +9,6 @@ import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,6 +52,8 @@ public class InMemoryCacheLedger implements CacheLedger {
                      end
                 \s
                      current = tonumber(current)
+                     local requested=tonumber(ARGV[1])
+                     if not current or not requested then return 0 end\s
                 \s
                      if current >= tonumber(ARGV[1]) then
                          redis.call('DECRBY', KEYS[1], ARGV[1])
@@ -65,7 +66,11 @@ public class InMemoryCacheLedger implements CacheLedger {
         RScript rScript = redisClient.getScript();
         final String key = CommonConstants.BUDGET_KEY + orgId;
         final long result = rScript.eval(RScript.Mode.READ_WRITE, lua, RScript.ReturnType.LONG, List.of(key), estimatedTokens);
-        return result >= 1L;
+        if (result == 0) {
+            log.warn("Token reservation failed for orgId={} (insufficient or missing budget)", orgId);
+            return false;
+        }
+        return true;
     }
 
     @Override
