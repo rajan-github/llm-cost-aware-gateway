@@ -1,8 +1,6 @@
 package com.rajan.llm_cost_aware_gateway.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,7 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TokenLedger {
-    @Id
+    @EmbeddedId
     private LedgerKey ledgerId;
     private long tokens;
     private LocalDateTime timestamp;
