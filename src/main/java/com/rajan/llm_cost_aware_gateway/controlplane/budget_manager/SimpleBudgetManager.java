@@ -1,6 +1,5 @@
 package com.rajan.llm_cost_aware_gateway.controlplane.budget_manager;
 
-import com.rajan.llm_cost_aware_gateway.controlplane.models.LedgerEntry;
 import com.rajan.llm_cost_aware_gateway.enums.LEDGER_STATE;
 import com.rajan.llm_cost_aware_gateway.ledger.CacheLedger;
 import com.rajan.llm_cost_aware_gateway.ledger.DBLedger;
@@ -37,7 +36,8 @@ public class SimpleBudgetManager implements BudgetManager {
         log.info("commit is invoked for orgId: {}, requestId: {}", orgId, requestId);
         var reserveEntry = dbLedger.getReserveEntry(requestId, orgId);
         if (reserveEntry != null && reserveEntry.getTokens() < actualTokens) {
-            cacheLedger.deductTokens(orgId, actualTokens - reserveEntry.getTokens());
+            long newVal=cacheLedger.deductTokens(orgId, actualTokens - reserveEntry.getTokens());
+            log.info("reserveTokens for orgId: {}, tokens: {}", orgId, newVal);
         } else {
             if (reserveEntry != null) {
                 long refundTokens = Math.max(0L, reserveEntry.getTokens() - actualTokens);
