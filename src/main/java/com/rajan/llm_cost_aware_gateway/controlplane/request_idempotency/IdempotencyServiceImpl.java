@@ -32,19 +32,18 @@ public class IdempotencyServiceImpl implements IdempotencyService {
         log.info("IdempotencyServiceImpl preHandle for request: {}", request);
         final RMapCache<String, IdempotencyResult> idempotencyResultMap = redisClient.getMapCache(REQUEST_IDEMPOTENCY_KEY_PREFIX);
         final var key = Utils.constructKey(request.getOrgId(), request.getIdempotencyKey().toString());
-        final var result = idempotencyResultMap.get(key);
         final var requestHash = Utils.getRequestHash(request);
-        if (result == null) {
-            idempotencyResultMap.put(key, new IdempotencyResult(IdempotencyResult.Status.IN_PROGRESS, requestHash, null, 0L, Instant.now().getEpochSecond()), 5, TimeUnit.MINUTES);
+        final var oldResult = idempotencyResultMap.putIfAbsent(key, new IdempotencyResult(IdempotencyResult.Status.IN_PROGRESS, requestHash, null, 0L, Instant.now().getEpochSecond()), 5, TimeUnit.MINUTES);
+        if (oldResult == null) {
             return Optional.empty();
         } else {
-            if (result.status() == IdempotencyResult.Status.IN_PROGRESS) {
-                throw new RetryLaterException();
-            }
-            if (!result.requestHash().equals(requestHash)) {
+            if (!oldResult.requestHash().equals(requestHash)) {
                 throw new IllegalArgumentException("RequestHash mismatch. Use a unique idempotency key for a new request");
             }
-            return Optional.of(result);
+            if (oldResult.status() == IdempotencyResult.Status.IN_PROGRESS) {
+                throw new RetryLaterException();
+            }
+            return Optional.of(oldResult);
         }
     }
 
@@ -54,6 +53,10 @@ public class IdempotencyServiceImpl implements IdempotencyService {
         final RMapCache<String, IdempotencyResult> idempotencyResultMap = redisClient.getMapCache(REQUEST_IDEMPOTENCY_KEY_PREFIX);
         final var key = Utils.constructKey(request.getOrgId(), request.getIdempotencyKey().toString());
         final var requestHash = Utils.getRequestHash(request);
+        final var existing = idempotencyResultMap.get(key);
+        if (existing != null && existing.status() == IdempotencyResult.Status.COMPLETED) {
+            return;
+        }
         idempotencyResultMap.put(key, new IdempotencyResult(IdempotencyResult.Status.COMPLETED, requestHash, response, tokensUsed, Instant.now().getEpochSecond()), 60, TimeUnit.MINUTES);
     }
 
