@@ -103,9 +103,9 @@ public class OpenAIClient implements LLmClient {
         return tokens;
     }
 
-    private String fakeResponse(int maxTokens) {
+    private String fakeResponse(long maxTokens) {
         double p = ThreadLocalRandom.current().nextDouble();
-        int outputTokens;
+        long outputTokens;
         if (p < 0.7) {
             outputTokens = (int) (0.5 * maxTokens);
         } else if (p < 0.9) {
@@ -113,7 +113,7 @@ public class OpenAIClient implements LLmClient {
         } else {
             outputTokens = maxTokens;
         }
-        int charLength = outputTokens << 2;
-        return Constants.RESPONSE_TEXT.substring(0, Math.min(charLength, Constants.RESPONSE_TEXT.length()));
+        long charLength = outputTokens << 2;
+        return Constants.RESPONSE_TEXT.substring(0, (int)Math.min(charLength, Constants.RESPONSE_TEXT.length()));
     }
 }

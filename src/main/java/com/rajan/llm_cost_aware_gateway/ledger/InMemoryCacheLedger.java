@@ -86,4 +86,10 @@ public class InMemoryCacheLedger implements CacheLedger {
         final String key = CommonConstants.BUDGET_KEY + orgId;
         return redisClient.getAtomicLong(key).addAndGet(-tokens);
     }
+
+    @Override
+    public long getRemainingTokens(String orgId) {
+        final String key = CommonConstants.BUDGET_KEY + orgId;
+        return redisClient.getAtomicLong(CommonConstants.BUDGET_KEY + orgId).get();
+    }
 }

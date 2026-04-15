@@ -2,7 +2,7 @@ package com.rajan.llm_cost_aware_gateway.ledger;
 
 import com.rajan.llm_cost_aware_gateway.entities.LedgerKey;
 import com.rajan.llm_cost_aware_gateway.entities.TokenLedger;
-import com.rajan.llm_cost_aware_gateway.enums.LEDGER_STATE;
+import com.rajan.llm_cost_aware_gateway.enums.LedgerState;
 import com.rajan.llm_cost_aware_gateway.repository.LedgerRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -20,7 +20,7 @@ public class RelationalDBLedger implements DBLedger {
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
     @Override
-    public void insert(String orgId, UUID requestId, long tokens, LEDGER_STATE state) {
+    public void insert(String orgId, UUID requestId, long tokens, LedgerState state) {
         log.info("insert is invoked with orgId: {}, requestId: {}, tokens: {} and state: {}", orgId, requestId, tokens, state);
         ledgerRepository.insertIgnoreDuplicate(requestId, state.name(), orgId, tokens, LocalDateTime.now());
     }

@@ -1,0 +1,36 @@
+package com.rajan.llm_cost_aware_gateway.router;
+
+import com.rajan.llm_cost_aware_gateway.controlplane.models.Request;
+import com.rajan.llm_cost_aware_gateway.dataplane.llm_clients.GeminiClient;
+import com.rajan.llm_cost_aware_gateway.dataplane.llm_clients.OpenAIClient;
+import com.rajan.llm_cost_aware_gateway.dataplane.models.LLMRequest;
+import com.rajan.llm_cost_aware_gateway.enums.BudgetDecision;
+import com.rajan.llm_cost_aware_gateway.executionplan.ExecutionPlan;
+import com.rajan.llm_cost_aware_gateway.executionplan.SimpleExecutionPlan;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+@Slf4j
+@Component
+public class SimpleRouter implements Router {
+    @Override
+    public ExecutionPlan route(Request request, BudgetDecision budgetDecision) {
+        log.info("Received request {}, budgetDecision {}", request, budgetDecision);
+        if (request == null || budgetDecision == null) {
+            throw new IllegalArgumentException("request and budgetDecision cannot be null");
+        }
+        final var requestBuilder = LLMRequest.builder()
+                .requestId(request.getIdempotencyKey())
+                .prompt(request.getPrompt())
+                .maxTokens(request.getMaxTokens())
+                .temperature(0.0);
+
+        return switch (budgetDecision) {
+            case BudgetDecision.DOWNGRADE ->
+                    new SimpleExecutionPlan(new OpenAIClient(), requestBuilder.model("OPENAI").build());
+            case BudgetDecision.REJECT -> new SimpleExecutionPlan(null, null);
+            case BudgetDecision.ACCEPT ->
+                    new SimpleExecutionPlan(new GeminiClient(), requestBuilder.model("Gemini").build());
+        };
+    }
+}

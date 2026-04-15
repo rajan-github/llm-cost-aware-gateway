@@ -1,6 +1,6 @@
 package com.rajan.llm_cost_aware_gateway.enums;
 
-public enum LEDGER_STATE {
+public enum LedgerState {
     RESERVE,
     COMMIT,
     REFUND

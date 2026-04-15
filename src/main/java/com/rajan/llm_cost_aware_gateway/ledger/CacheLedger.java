@@ -15,4 +15,6 @@ public interface CacheLedger {
     long refundTokens(String orgId, long tokens);
 
     long deductTokens(String orgId, long tokens);
+
+    long getRemainingTokens(String orgId);
 }

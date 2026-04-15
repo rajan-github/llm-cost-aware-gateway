@@ -1,6 +1,6 @@
 package com.rajan.llm_cost_aware_gateway.controlplane.budget_manager;
 
-import com.rajan.llm_cost_aware_gateway.enums.LEDGER_STATE;
+import com.rajan.llm_cost_aware_gateway.enums.LedgerState;
 import com.rajan.llm_cost_aware_gateway.ledger.CacheLedger;
 import com.rajan.llm_cost_aware_gateway.ledger.DBLedger;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +27,7 @@ public class SimpleBudgetManager implements BudgetManager {
         if (!cacheLedger.reserveTokens(orgId, estimatedTokens)) {
             return false;
         }
-        dbLedger.insert(orgId, requestId, estimatedTokens, LEDGER_STATE.RESERVE);
+        dbLedger.insert(orgId, requestId, estimatedTokens, LedgerState.RESERVE);
         return true;
     }
 
@@ -43,16 +43,16 @@ public class SimpleBudgetManager implements BudgetManager {
                 long refundTokens = Math.max(0L, reserveEntry.getTokens() - actualTokens);
                 final var newVal = cacheLedger.refundTokens(orgId, refundTokens);
                 log.info("refundTokens for orgId: {}, and new tokens value is: {}", orgId, newVal);
-                dbLedger.insert(orgId, requestId, refundTokens, LEDGER_STATE.REFUND);
+                dbLedger.insert(orgId, requestId, refundTokens, LedgerState.REFUND);
             }
         }
-        dbLedger.insert(orgId, requestId, actualTokens, LEDGER_STATE.COMMIT);
+        dbLedger.insert(orgId, requestId, actualTokens, LedgerState.COMMIT);
     }
 
     @Override
     public void refund(String orgId, UUID requestId, long refundTokens) {
         log.info("refund is invoked for orgId: {}, requestId: {}", orgId, requestId);
         cacheLedger.refundTokens(orgId, refundTokens);
-        dbLedger.insert(orgId, requestId, refundTokens, LEDGER_STATE.REFUND);
+        dbLedger.insert(orgId, requestId, refundTokens, LedgerState.REFUND);
     }
 }

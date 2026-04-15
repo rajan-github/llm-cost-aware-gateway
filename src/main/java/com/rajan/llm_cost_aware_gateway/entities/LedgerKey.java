@@ -1,6 +1,6 @@
 package com.rajan.llm_cost_aware_gateway.entities;
 
-import com.rajan.llm_cost_aware_gateway.enums.LEDGER_STATE;
+import com.rajan.llm_cost_aware_gateway.enums.LedgerState;
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,6 +15,6 @@ import java.util.UUID;
 @NoArgsConstructor
 public class LedgerKey implements Serializable {
     private UUID requestId;
-    private LEDGER_STATE ledgerState;
+    private LedgerState ledgerState;
     private String orgId;
 }
