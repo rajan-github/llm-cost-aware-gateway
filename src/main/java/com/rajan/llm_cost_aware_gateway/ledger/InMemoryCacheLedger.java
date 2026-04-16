@@ -2,6 +2,7 @@ package com.rajan.llm_cost_aware_gateway.ledger;
 
 import com.rajan.llm_cost_aware_gateway.constants.CommonConstants;
 import com.rajan.llm_cost_aware_gateway.controlplane.models.TokenStats;
+import com.rajan.llm_cost_aware_gateway.enums.Endpoints;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RMap;
 import org.redisson.api.RScript;
@@ -26,19 +27,19 @@ public class InMemoryCacheLedger implements CacheLedger {
 
 
     @Override
-    public Optional<TokenStats> getTokenStats(String orgId, String endpoint, String model) {
+    public Optional<TokenStats> getTokenStats(String orgId, Endpoints endpoint, String model) {
         log.info("getTokenStats is invoked for orgId: {}, endpoint: {}, model: {}", orgId, endpoint, model);
         final RMap<String, TokenStats> tokenStatsMap = redisClient.getMap(CommonConstants.TOKEN_STATS_KEY);
-        final var key = createLedgerKey(orgId, endpoint, model);
+        final var key = createLedgerKey(orgId, endpoint.name(), model);
         final var tokenStats = tokenStatsMap.get(key);
         return Optional.ofNullable(tokenStats);
     }
 
     @Override
-    public void updateTokenStats(String orgId, String endpoint, String model, TokenStats stats) {
+    public void updateTokenStats(String orgId, Endpoints endpoint, String model, TokenStats stats) {
         log.info("updateTokenStats- updating token stats for orgId: {}, endPoint: {}, model: {}", orgId, endpoint, model);
         final RMap<String, TokenStats> tokenStatsMap = redisClient.getMap(CommonConstants.TOKEN_STATS_KEY);
-        final var key = createLedgerKey(orgId, endpoint, model);
+        final var key = createLedgerKey(orgId, endpoint.name(), model);
         tokenStatsMap.put(key, stats);
     }
 

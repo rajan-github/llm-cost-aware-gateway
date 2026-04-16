@@ -48,7 +48,7 @@ public class Utils {
         hasher.putString(request.getOrgId(), StandardCharsets.UTF_8);
         hasher.putString(request.getPrompt(), StandardCharsets.UTF_8);
         hasher.putString(request.getModel(), StandardCharsets.UTF_8);
-        hasher.putString(request.getEndpoint(), StandardCharsets.UTF_8);
+        hasher.putString(request.getEndpoint().name(), StandardCharsets.UTF_8);
         return hasher.hash().toString();
     }
 }
