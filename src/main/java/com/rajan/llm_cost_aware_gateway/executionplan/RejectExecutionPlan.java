@@ -9,12 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 
 @Slf4j
-public class SimpleExecutionPlan implements ExecutionPlan {
+public class RejectExecutionPlan implements ExecutionPlan {
     private final LLmClient llmClient;
     private final LLMRequest request;
 
     @Autowired
-    public SimpleExecutionPlan(LLmClient llmClient, LLMRequest request) {
+    public RejectExecutionPlan(LLmClient llmClient, LLMRequest request) {
         this.llmClient = llmClient;
         this.request = request;
     }
@@ -32,5 +32,10 @@ public class SimpleExecutionPlan implements ExecutionPlan {
         } else {
             return llmClient.complete(request);
         }
+    }
+
+    @Override
+    public String getPlanName() {
+        return "reject-execution-plan";
     }
 }
