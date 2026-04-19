@@ -24,7 +24,7 @@ public class SimpleBudgetManager implements BudgetManager {
     @Override
     public boolean tryReserve(String orgId, long estimatedTokens, UUID requestId) {
         log.info("tryReserve is invoked for orgId: {}, requestId: {}", orgId, requestId);
-        if (!cacheLedger.reserveTokens(orgId, estimatedTokens)) {
+        if (!cacheLedger.reserveTokens(orgId, requestId, estimatedTokens)) {
             return false;
         }
         dbLedger.insert(orgId, requestId, estimatedTokens, LedgerState.RESERVE);
