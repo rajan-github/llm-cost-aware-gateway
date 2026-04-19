@@ -1,6 +1,8 @@
 package com.rajan.llm_cost_aware_gateway.repository;
 
 
+import com.rajan.llm_cost_aware_gateway.entities.LedgerKey;
+import com.rajan.llm_cost_aware_gateway.entities.TokenLedger;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -11,7 +13,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Repository
-public interface LedgerRepository<TokenLedger, LedgerKey> extends CrudRepository<TokenLedger, LedgerKey> {
+public interface LedgerRepository extends CrudRepository<TokenLedger, LedgerKey> {
     @Modifying
     @Query(value = """
                 INSERT INTO token_ledger (request_id, state, org_id, tokens, timestamp)

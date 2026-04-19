@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 import static com.rajan.llm_cost_aware_gateway.dataplane.contstants.Constants.MILLION;
 
 @Slf4j
-@Service
+@Service(value = "OPENAI")
 public class OpenAIClient implements LLmClient {
     private final double inputCostPerMillion = 0.15;
     private final double outputCostPerMillion = 5.0;

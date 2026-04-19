@@ -16,7 +16,7 @@ import java.util.UUID;
 @Slf4j
 @Component
 public class RelationalDBLedger implements DBLedger {
-    private LedgerRepository<TokenLedger, LedgerKey> ledgerRepository;
+    private LedgerRepository ledgerRepository;
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
     @Override
