@@ -76,10 +76,10 @@ public class InMemoryCacheLedger implements CacheLedger {
                      end
                 \s""";
 
-        RScript rScript = redisClient.getScript();
+        RScript rScript = redisClient.getScript(StringCodec.INSTANCE);
         final String budgetKey = Utils.constructKey(CommonConstants.BUDGET_KEY, orgId);
         final String reserveKey = Utils.constructKey(CommonConstants.RESERVE_KEY, orgId, requestId.toString());
-        final long result = rScript.eval(RScript.Mode.READ_WRITE, lua, RScript.ReturnType.LONG, List.of(budgetKey, reserveKey), String.valueOf(estimatedTokens));
+        final long result = rScript.eval(RScript.Mode.READ_WRITE, lua, RScript.ReturnType.LONG, List.of(budgetKey, reserveKey), estimatedTokens);
         if (result != 1) {
             log.warn("Token reservation failed for orgId={} (insufficient or missing budget) and result is: {}", orgId, result);
             return false;

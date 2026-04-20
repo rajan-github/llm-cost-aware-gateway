@@ -52,7 +52,7 @@ public class RefundReservedTokens {
         long endValue = Instant.now().minus(5L, ChronoUnit.MINUTES).getEpochSecond();
         final var reservationKeys = redisClient.getScoredSortedSet("reservations:index").valueRange(0, true, endValue, true, 0, 100);
 
-        final var rScript = redisClient.getScript();
+        final var rScript = redisClient.getScript(StringCodec.INSTANCE);
         for (var reserveKey : reservationKeys) {
             var reserveKeyStr = (String) reserveKey;
             rScript.eval(RScript.Mode.READ_WRITE, luaScript, RScript.ReturnType.LONG, List.of(reserveKeyStr, "reservations:index"), String.valueOf(300));
