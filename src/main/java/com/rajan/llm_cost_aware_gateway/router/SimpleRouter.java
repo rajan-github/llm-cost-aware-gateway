@@ -7,9 +7,12 @@ import com.rajan.llm_cost_aware_gateway.dataplane.models.LLMRequest;
 import com.rajan.llm_cost_aware_gateway.enums.BudgetDecision;
 import com.rajan.llm_cost_aware_gateway.executionplan.BudgetExecutionPlan;
 import com.rajan.llm_cost_aware_gateway.executionplan.ExecutionPlan;
+import com.rajan.llm_cost_aware_gateway.executionplan.FallbackExecutionPlan;
 import com.rajan.llm_cost_aware_gateway.executionplan.RejectExecutionPlan;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Slf4j
 @Component
@@ -31,7 +34,7 @@ public class SimpleRouter implements Router {
             case BudgetDecision.DOWNGRADE ->
                     new BudgetExecutionPlan(new OpenAIClient(), requestBuilder.model("OPENAI").build());
             case BudgetDecision.ACCEPT ->
-                    new RejectExecutionPlan(new GeminiClient(), requestBuilder.model("Gemini").build());
+                    new FallbackExecutionPlan(List.of(new GeminiClient()), requestBuilder.model("Gemini").build());
         };
     }
 }

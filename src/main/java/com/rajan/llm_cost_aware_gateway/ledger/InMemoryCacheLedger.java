@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RMap;
 import org.redisson.api.RScript;
 import org.redisson.api.RedissonClient;
+import org.redisson.client.codec.StringCodec;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -55,12 +56,14 @@ public class InMemoryCacheLedger implements CacheLedger {
                      end
                 
                      if redis.call('EXISTS', KEYS[2]) == 1 then
-                        return 1
+                        return -1
                      end
                 \s
                      current = tonumber(current)
                      local requested=tonumber(ARGV[1])
-                     if not current or not requested then return 0 end\s
+                     if not current or not requested then
+                       return -2
+                     end\s
                 \s
                      if current >= requested then
                          redis.call('DECRBY', KEYS[1], requested)
@@ -69,16 +72,16 @@ public class InMemoryCacheLedger implements CacheLedger {
                          redis.call('ZADD', 'reservations:index', now, KEYS[2])
                          return 1
                      else\s
-                         return 0
+                         return -3
                      end
                 \s""";
 
         RScript rScript = redisClient.getScript();
         final String budgetKey = Utils.constructKey(CommonConstants.BUDGET_KEY, orgId);
         final String reserveKey = Utils.constructKey(CommonConstants.RESERVE_KEY, orgId, requestId.toString());
-        final long result = rScript.eval(RScript.Mode.READ_WRITE, lua, RScript.ReturnType.LONG, List.of(budgetKey, reserveKey), estimatedTokens);
-        if (result == 0) {
-            log.warn("Token reservation failed for orgId={} (insufficient or missing budget)", orgId);
+        final long result = rScript.eval(RScript.Mode.READ_WRITE, lua, RScript.ReturnType.LONG, List.of(budgetKey, reserveKey), String.valueOf(estimatedTokens));
+        if (result != 1) {
+            log.warn("Token reservation failed for orgId={} (insufficient or missing budget) and result is: {}", orgId, result);
             return false;
         }
         return true;
@@ -87,20 +90,20 @@ public class InMemoryCacheLedger implements CacheLedger {
     @Override
     public long refundTokens(String orgId, long tokens) {
         log.info("refundTokens for orgId: {} and refundTokens: {}", orgId, tokens);
-        final String key = CommonConstants.BUDGET_KEY + orgId;
+        final String key = Utils.constructKey(CommonConstants.BUDGET_KEY, orgId);
         return redisClient.getAtomicLong(key).addAndGet(tokens);
     }
 
     @Override
     public long deductTokens(String orgId, long tokens) {
         log.info("deductTokens for orgId: {}, tokens: {}", orgId, tokens);
-        final String key = CommonConstants.BUDGET_KEY + orgId;
+        final String key = Utils.constructKey(CommonConstants.BUDGET_KEY, orgId);
         return redisClient.getAtomicLong(key).addAndGet(-tokens);
     }
 
     @Override
     public long getRemainingTokens(String orgId) {
-        final String key = CommonConstants.BUDGET_KEY + orgId;
-        return redisClient.getAtomicLong(CommonConstants.BUDGET_KEY + orgId).get();
+        final String key = Utils.constructKey(CommonConstants.BUDGET_KEY, orgId);
+        return redisClient.getAtomicLong(key).get();
     }
 }

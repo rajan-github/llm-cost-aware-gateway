@@ -5,6 +5,8 @@ import com.rajan.llm_cost_aware_gateway.entities.TokenLedger;
 import com.rajan.llm_cost_aware_gateway.enums.LedgerState;
 import com.rajan.llm_cost_aware_gateway.repository.LedgerRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,13 +18,23 @@ import java.util.UUID;
 @Slf4j
 @Component
 public class RelationalDBLedger implements DBLedger {
-    private LedgerRepository ledgerRepository;
+
+    @Autowired
+    private final LedgerRepository ledgerRepository;
+
+    public RelationalDBLedger(LedgerRepository ledgerRepository) {
+        this.ledgerRepository = ledgerRepository;
+    }
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
     @Override
     public void insert(String orgId, UUID requestId, long tokens, LedgerState state) {
         log.info("insert is invoked with orgId: {}, requestId: {}, tokens: {} and state: {}", orgId, requestId, tokens, state);
-        ledgerRepository.insertIgnoreDuplicate(requestId, state.name(), orgId, tokens, LocalDateTime.now());
+        try {
+            ledgerRepository.save(new TokenLedger(new LedgerKey(requestId, state, orgId), tokens, LocalDateTime.now()));
+        } catch (DataIntegrityViolationException ex) {
+            log.error("insert failed with exception: {}. Ignoring insertion.", ex.getMessage());
+        }
     }
 
     @Transactional(readOnly = true)

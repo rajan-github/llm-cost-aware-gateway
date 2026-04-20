@@ -16,18 +16,22 @@ import java.util.UUID;
 public interface LedgerRepository extends CrudRepository<TokenLedger, LedgerKey> {
     @Modifying
     @Query(value = """
-                INSERT INTO token_ledger (request_id, state, org_id, tokens, timestamp)
+                INSERT INTO token_ledger (request_id, ledger_state, org_id, tokens, timestamp)
                 VALUES (:requestId, :state, :orgId, :tokens, :timestamp)
-                ON CONFLICT (request_id, state, org_id)
+                ON CONFLICT (request_id, ledger_state, org_id)
                 DO NOTHING
             """, nativeQuery = true)
-    void insertIgnoreDuplicate(UUID requestId, String state, String orgId, long tokens, LocalDateTime timestamp);
+    void insertIgnoreDuplicate(@Param("requestId") UUID requestId,
+                               @Param("state") String state,
+                               @Param("orgId") String orgId,
+                               @Param("tokens") long tokens,
+                               @Param("timestamp") LocalDateTime timestamp);
 
 
     @Query(value = """
                 SELECT * FROM token_ledger 
                 WHERE request_id = :requestId 
-                AND state = 'RESERVED' 
+                AND ledger_state = 'RESERVED' 
                 AND org_id = :orgId
             """, nativeQuery = true)
     TokenLedger findReserved(@Param("orgId") String orgId, @Param("requestId") UUID requestId
@@ -35,9 +39,9 @@ public interface LedgerRepository extends CrudRepository<TokenLedger, LedgerKey>
 
 
     @Query(value = """
-    SELECT COALESCE(SUM(tokens), 0) 
-    FROM token_ledger 
-    WHERE org_id = :orgId
-""", nativeQuery = true)
+                SELECT COALESCE(SUM(tokens), 0) 
+                FROM token_ledger 
+                WHERE org_id = :orgId
+            """, nativeQuery = true)
     long sumUsageByOrgId(@Param("orgId") String orgId);
 }
